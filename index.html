@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#534AB7" />
+  <meta name="description" content="A private offline-capable Bible study tracker for two partners." />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" />
+  <title>Bible Study Tracker</title>
+
+<style>
+:root{
+  --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --color-background-primary:#fbfaf7;
+  --color-background-secondary:#f1eee8;
+  --color-text-primary:#1f1c18;
+  --color-text-secondary:#6f665d;
+  --color-text-tertiary:#aaa29a;
+  --color-border-secondary:#d2c9bd;
+  --color-border-tertiary:#e6ded2;
+  --border-radius-md:12px;
+  --border-radius-lg:18px;
+}
+html,body{min-height:100%;background:linear-gradient(180deg,#f6f2eb,#fbfaf7 28%);color:var(--color-text-primary)}
+body{padding:18px;}
+button,input,textarea{font:inherit}
+.app-shell{max-width:980px;margin:0 auto;background:rgba(255,255,255,.72);border:1px solid var(--color-border-tertiary);border-radius:28px;box-shadow:0 20px 60px rgba(37,29,18,.08);padding:20px;}
+.hero{display:flex;justify-content:space-between;gap:18px;align-items:center;padding:18px;border-radius:22px;background:linear-gradient(135deg,#EEEDFE,#EAF3DE);margin-bottom:14px}
+.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#3C3489;font-weight:700;margin-bottom:6px}
+h1{font-size:clamp(28px,4vw,44px);line-height:1.05;margin:0 0 8px}
+.hero-sub{font-size:14px;color:#4d463f;max-width:620px;line-height:1.5}.install-btn{align-items:center;gap:7px;padding:10px 16px;border:none;border-radius:999px;background:#534AB7;color:#fff;cursor:pointer;box-shadow:0 10px 24px rgba(83,74,183,.25);white-space:nowrap}.install-btn:hover{filter:brightness(.97)}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}@media(max-width:700px){body{padding:8px}.app-shell{padding:12px;border-radius:20px}.hero{align-items:flex-start;flex-direction:column}.install-btn{width:100%;justify-content:center}.bkcards{grid-template-columns:1fr!important}.tb{font-size:12px}.stats{grid-template-columns:repeat(2,1fr)!important}}
+</style>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+.wrap{padding:1rem 0;font-family:var(--font-sans)}
+.tabs{display:flex;border-bottom:0.5px solid var(--color-border-tertiary);margin-bottom:1.25rem}
+.tb{flex:1;padding:9px 4px;font-size:13px;background:none;border:none;cursor:pointer;color:var(--color-text-secondary);border-bottom:2px solid transparent;margin-bottom:-1px;font-family:var(--font-sans)}
+.tb.on{color:var(--color-text-primary);border-bottom-color:#534AB7;font-weight:500}
+.pane{display:none}.pane.on{display:block}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:1.25rem}
+.stat{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px;text-align:center}
+.slbl{font-size:11px;color:var(--color-text-secondary);margin-bottom:3px}
+.sval{font-size:18px;font-weight:500;color:var(--color-text-primary)}
+.fire{color:#BA7517}
+.cal-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+.nav{background:none;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);padding:5px 10px;cursor:pointer;color:var(--color-text-primary);font-size:13px;font-family:var(--font-sans)}
+.nav:hover{background:var(--color-background-secondary)}
+.mttl{font-size:16px;font-weight:500;color:var(--color-text-primary)}
+.wkrow{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px;text-align:center}
+.wklbl{font-size:11px;color:var(--color-text-secondary)}
+.cgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.day{aspect-ratio:1;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;font-size:11px;color:var(--color-text-primary);user-select:none;gap:2px;position:relative}
+.day:hover{background:var(--color-background-secondary)}
+.day.emp{border-color:transparent;cursor:default}.day.emp:hover{background:none}
+.day.fut{color:var(--color-text-tertiary);cursor:default}.day.fut:hover{background:none}
+.day.tod{border:1.5px solid #534AB7}
+.day.both{background:#EAF3DE;border-color:#3B6D11}
+.day.part{background:#FAEEDA;border-color:#BA7517}
+.day.sel{outline:2px solid #534AB7;outline-offset:2px}
+.dots{display:flex;gap:2px}
+.dot{width:5px;height:5px;border-radius:50%;background:var(--color-border-secondary)}
+.dot.d1{background:#534AB7}.dot.d2{background:#0F6E56}
+.ndot{position:absolute;top:2px;right:3px;width:4px;height:4px;border-radius:50%;background:#BA7517}
+.leg-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px}
+.leg{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--color-text-secondary)}
+.lsq{width:12px;height:12px;border-radius:3px;border:0.5px solid var(--color-border-secondary);flex-shrink:0}
+.dpanel{margin-top:1rem;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-lg);padding:1rem}
+.dptop{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.dptitle{font-size:13px;font-weight:500;color:var(--color-text-primary)}
+.xbtn{background:none;border:none;cursor:pointer;color:var(--color-text-secondary);font-size:16px;padding:0;font-family:var(--font-sans)}
+.checks{display:flex;gap:8px;margin-bottom:10px}
+.pchk{flex:1;padding:8px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:none;cursor:pointer;font-size:12px;color:var(--color-text-primary);display:flex;align-items:center;justify-content:center;gap:5px;font-family:var(--font-sans)}
+.pchk.a1{background:#EEEDFE;border-color:#534AB7;color:#3C3489}
+.pchk.a2{background:#E1F5EE;border-color:#0F6E56;color:#085041}
+.nlbl{font-size:12px;color:var(--color-text-secondary);margin-bottom:5px}
+.ntxt{width:100%;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);padding:8px;font-size:13px;font-family:var(--font-sans);color:var(--color-text-primary);background:var(--color-background-primary);resize:vertical;min-height:60px}
+.ntxt:focus{outline:none;border-color:#534AB7}
+.row-btns{display:flex;align-items:center;gap:10px;margin-top:8px}
+.sbtn{padding:6px 14px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:none;cursor:pointer;font-size:12px;color:var(--color-text-primary);font-family:var(--font-sans)}
+.sbtn:hover{background:var(--color-background-secondary)}
+.smsg{font-size:11px;color:#3B6D11}
+.bkcards{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1.25rem}
+.bkcard{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px 12px}
+.bktype{font-size:11px;color:var(--color-text-secondary);margin-bottom:3px}
+.bkname{font-size:14px;font-weight:500;color:var(--color-text-primary)}
+.rptheme{font-size:13px;color:var(--color-text-secondary);font-style:italic;margin-bottom:1rem}
+.wtitle{font-size:13px;font-weight:500;margin-bottom:8px;color:var(--color-text-primary)}
+.witem{border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:9px 12px;margin-bottom:6px}
+.witem.cw{border-color:#534AB7;background:#EEEDFE}
+.wnum{font-size:11px;color:var(--color-text-secondary);margin-bottom:3px}
+.wnum.cw{color:#3C3489;font-weight:500}
+.wread{font-size:13px;color:var(--color-text-primary);line-height:1.5}
+.wtag{font-size:11px;color:var(--color-text-secondary)}
+.vbox{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:12px 14px;border-left:3px solid #534AB7;margin-bottom:1.25rem}
+.vlbl{font-size:11px;color:var(--color-text-secondary);margin-bottom:5px}
+.vtext{font-size:13px;color:var(--color-text-primary);line-height:1.6;font-style:italic}
+.vref{font-size:11px;color:var(--color-text-secondary);margin-top:5px}
+.stitle{font-size:14px;font-weight:500;margin-bottom:10px;color:var(--color-text-primary)}
+.frow{margin-bottom:12px}
+.flbl{font-size:12px;color:var(--color-text-secondary);margin-bottom:5px;display:block}
+.finp{width:100%;padding:8px 12px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);font-size:14px;background:var(--color-background-primary);color:var(--color-text-primary);font-family:var(--font-sans)}
+.finp:focus{outline:none;border-color:#534AB7}
+.pvbtn{padding:8px 18px;border-radius:var(--border-radius-md);border:0.5px solid #534AB7;background:#EEEDFE;color:#3C3489;cursor:pointer;font-size:13px;font-family:var(--font-sans)}
+.dbtn{padding:8px 18px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-tertiary);background:none;color:var(--color-text-secondary);cursor:pointer;font-size:13px;font-family:var(--font-sans)}
+.sconfirm{font-size:12px;margin-top:8px;min-height:16px}
+.sep{border:none;border-top:0.5px solid var(--color-border-tertiary);margin:1.25rem 0}
+.prog-bar{height:6px;background:var(--color-border-tertiary);border-radius:3px;margin-top:8px;overflow:hidden}
+.prog-fill{height:100%;background:#534AB7;border-radius:3px;transition:width 0.3s}
+</style>
+</head>
+<body>
+
+
+<div class="app-shell">
+<header class="hero">
+  <div>
+    <p class="eyebrow">Family Bible Study Tracker</p>
+    <h1>Stay consistent together.</h1>
+    <p class="hero-sub">Track daily study, shared streaks, notes, and your month-by-month reading plan.</p>
+  </div>
+  <button id="installBtn" class="install-btn" style="display:none"><i class="ti ti-download" aria-hidden="true"></i> Install App</button>
+</header>
+<div class="wrap">
+<h2 class="sr-only">Bible study tracker with dual-person check-in, reading plan, notes, and streaks</h2>
+
+<div class="tabs">
+  <button class="tb on" id="tbtn-calendar" onclick="switchTab('calendar',this)"><i class="ti ti-calendar" aria-hidden="true"></i> Calendar</button>
+  <button class="tb" id="tbtn-plan" onclick="switchTab('plan',this)"><i class="ti ti-book" aria-hidden="true"></i> Reading Plan</button>
+  <button class="tb" id="tbtn-settings" onclick="switchTab('settings',this)"><i class="ti ti-settings" aria-hidden="true"></i> Settings</button>
+</div>
+
+<div id="tab-calendar" class="pane on">
+  <div class="stats" id="statsRow"></div>
+  <div class="cal-hd">
+    <button class="nav" onclick="changeMonth(-1)"><i class="ti ti-chevron-left" aria-hidden="true"></i></button>
+    <span class="mttl" id="monthTitle"></span>
+    <button class="nav" onclick="changeMonth(1)"><i class="ti ti-chevron-right" aria-hidden="true"></i></button>
+  </div>
+  <div class="wkrow">
+    <div class="wklbl">Sun</div><div class="wklbl">Mon</div><div class="wklbl">Tue</div>
+    <div class="wklbl">Wed</div><div class="wklbl">Thu</div><div class="wklbl">Fri</div><div class="wklbl">Sat</div>
+  </div>
+  <div class="cgrid" id="calGrid"></div>
+  <div class="leg-row">
+    <div class="leg"><div class="lsq" style="background:#EAF3DE;border-color:#3B6D11"></div> Both studied</div>
+    <div class="leg"><div class="lsq" style="background:#FAEEDA;border-color:#BA7517"></div> One studied</div>
+    <div class="leg"><div style="width:8px;height:8px;border-radius:50%;background:#534AB7"></div> <span id="p1leg">Person 1</span></div>
+    <div class="leg"><div style="width:8px;height:8px;border-radius:50%;background:#0F6E56"></div> <span id="p2leg">Person 2</span></div>
+    <div class="leg"><div class="lsq" style="position:relative"><div style="position:absolute;top:2px;right:2px;width:4px;height:4px;border-radius:50%;background:#BA7517"></div></div> Has note</div>
+  </div>
+
+  <div id="dayPanel" class="dpanel" style="display:none">
+    <div class="dptop">
+      <div class="dptitle" id="dpTitle"></div>
+      <button class="xbtn" onclick="closePanel()" aria-label="Close"><i class="ti ti-x" aria-hidden="true"></i></button>
+    </div>
+    <div class="checks">
+      <button class="pchk" id="p1Btn" onclick="togglePerson(1)"><i class="ti ti-book-2" aria-hidden="true"></i> <span id="p1BtnLbl">Person 1</span></button>
+      <button class="pchk" id="p2Btn" onclick="togglePerson(2)"><i class="ti ti-book-2" aria-hidden="true"></i> <span id="p2BtnLbl">Person 2</span></button>
+    </div>
+    <div class="nlbl"><i class="ti ti-pencil" aria-hidden="true"></i> Session notes</div>
+    <textarea class="ntxt" id="noteArea" placeholder="What did you study? Any reflections, prayers, or takeaways..."></textarea>
+    <div class="row-btns">
+      <button class="sbtn" onclick="saveNote()"><i class="ti ti-device-floppy" aria-hidden="true"></i> Save note</button>
+      <span class="smsg" id="saveMsg"></span>
+    </div>
+  </div>
+</div>
+
+<div id="tab-plan" class="pane">
+  <div class="vbox">
+    <div class="vlbl"><i class="ti ti-star" aria-hidden="true"></i> Verse of the day</div>
+    <div class="vtext" id="verseText"></div>
+    <div class="vref" id="verseRef"></div>
+  </div>
+  <div class="cal-hd">
+    <button class="nav" onclick="changeMonth(-1)"><i class="ti ti-chevron-left" aria-hidden="true"></i></button>
+    <span class="mttl" id="rpTitle"></span>
+    <button class="nav" onclick="changeMonth(1)"><i class="ti ti-chevron-right" aria-hidden="true"></i></button>
+  </div>
+  <div class="rptheme" id="rpTheme"></div>
+  <div class="bkcards" id="bookCards"></div>
+  <div id="progSection" style="margin-bottom:1.25rem">
+    <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--color-text-secondary)">
+      <span>Monthly completion</span><span id="progLabel"></span>
+    </div>
+    <div class="prog-bar"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
+  </div>
+  <div class="wtitle">Weekly reading schedule</div>
+  <div id="weekList"></div>
+</div>
+
+<div id="tab-settings" class="pane">
+  <div class="stitle"><i class="ti ti-users" aria-hidden="true"></i> Study partners</div>
+  <div class="frow">
+    <label class="flbl">Partner 1 name</label>
+    <input class="finp" id="p1NameInput" type="text" placeholder="Your name" />
+  </div>
+  <div class="frow">
+    <label class="flbl">Partner 2 name</label>
+    <input class="finp" id="p2NameInput" type="text" placeholder="Spouse / partner name" />
+  </div>
+  <button class="pvbtn" onclick="saveNames()"><i class="ti ti-check" aria-hidden="true"></i> Save names</button>
+  <div class="sconfirm" id="nameConfirm" style="color:#3B6D11"></div>
+
+  <hr class="sep" />
+
+  <div class="stitle"><i class="ti ti-database" aria-hidden="true"></i> Data</div>
+  <p style="font-size:13px;color:var(--color-text-secondary);margin-bottom:12px">Progress is automatically saved across sessions on this device.</p>
+  <div class="row-btns" style="margin-bottom:10px;flex-wrap:wrap">
+    <button class="sbtn" onclick="exportData()"><i class="ti ti-download" aria-hidden="true"></i> Export backup</button>
+    <label class="sbtn" for="importFile" style="display:inline-flex;align-items:center;gap:5px"><i class="ti ti-upload" aria-hidden="true"></i> Import backup</label>
+    <input id="importFile" type="file" accept="application/json" style="display:none" onchange="importData(event)" />
+  </div>
+  <button class="dbtn" onclick="resetData()"><i class="ti ti-trash" aria-hidden="true"></i> Reset all progress</button>
+  <div class="sconfirm" id="resetConfirm"></div>
+</div>
+</div>
+</div>
+
+<script>
+const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+const PLAN=[
+  {ot:"Genesis",nt:"Matthew",theme:"Creation & new beginnings",weeks:[
+    {days:"1–7",ot:"Genesis 1–12",nt:"Matthew 1–7"},
+    {days:"8–14",ot:"Genesis 13–25",nt:"Matthew 8–14"},
+    {days:"15–21",ot:"Genesis 26–37",nt:"Matthew 15–21"},
+    {days:"22–31",ot:"Genesis 38–50",nt:"Matthew 22–28"}]},
+  {ot:"Exodus",nt:"Mark",theme:"Deliverance & God's power",weeks:[
+    {days:"1–7",ot:"Exodus 1–10",nt:"Mark 1–4"},
+    {days:"8–14",ot:"Exodus 11–20",nt:"Mark 5–8"},
+    {days:"15–21",ot:"Exodus 21–32",nt:"Mark 9–12"},
+    {days:"22–28",ot:"Exodus 33–40",nt:"Mark 13–16"}]},
+  {ot:"Leviticus & Numbers",nt:"Luke",theme:"Holiness & the journey",weeks:[
+    {days:"1–7",ot:"Leviticus 1–14",nt:"Luke 1–6"},
+    {days:"8–14",ot:"Leviticus 15–27",nt:"Luke 7–12"},
+    {days:"15–21",ot:"Numbers 1–18",nt:"Luke 13–18"},
+    {days:"22–31",ot:"Numbers 19–36",nt:"Luke 19–24"}]},
+  {ot:"Deuteronomy",nt:"John",theme:"Covenant & identity",weeks:[
+    {days:"1–7",ot:"Deuteronomy 1–9",nt:"John 1–5"},
+    {days:"8–14",ot:"Deuteronomy 10–19",nt:"John 6–10"},
+    {days:"15–21",ot:"Deuteronomy 20–28",nt:"John 11–15"},
+    {days:"22–30",ot:"Deuteronomy 29–34",nt:"John 16–21"}]},
+  {ot:"Joshua & Judges",nt:"Acts",theme:"Entering the land & early church",weeks:[
+    {days:"1–7",ot:"Joshua 1–12",nt:"Acts 1–7"},
+    {days:"8–14",ot:"Joshua 13–24",nt:"Acts 8–14"},
+    {days:"15–21",ot:"Judges 1–10",nt:"Acts 15–21"},
+    {days:"22–31",ot:"Judges 11–21",nt:"Acts 22–28"}]},
+  {ot:"Ruth & 1–2 Samuel",nt:"Romans",theme:"Faithfulness & righteousness",weeks:[
+    {days:"1–7",ot:"Ruth 1–4, 1 Samuel 1–5",nt:"Romans 1–4"},
+    {days:"8–14",ot:"1 Samuel 6–18",nt:"Romans 5–9"},
+    {days:"15–21",ot:"1 Samuel 19–31",nt:"Romans 10–13"},
+    {days:"22–30",ot:"2 Samuel 1–24",nt:"Romans 14–16"}]},
+  {ot:"1–2 Kings",nt:"1–2 Corinthians",theme:"Rise & fall of kingdoms",weeks:[
+    {days:"1–7",ot:"1 Kings 1–12",nt:"1 Corinthians 1–7"},
+    {days:"8–14",ot:"1 Kings 13–22",nt:"1 Corinthians 8–16"},
+    {days:"15–21",ot:"2 Kings 1–12",nt:"2 Corinthians 1–7"},
+    {days:"22–31",ot:"2 Kings 13–25",nt:"2 Corinthians 8–13"}]},
+  {ot:"1–2 Chronicles",nt:"Galatians–Colossians",theme:"Heritage & freedom in Christ",weeks:[
+    {days:"1–7",ot:"1 Chronicles 1–15",nt:"Galatians 1–6"},
+    {days:"8–14",ot:"1 Chronicles 16–29",nt:"Ephesians 1–6"},
+    {days:"15–21",ot:"2 Chronicles 1–18",nt:"Philippians 1–4, Colossians 1–2"},
+    {days:"22–31",ot:"2 Chronicles 19–36",nt:"Colossians 3–4"}]},
+  {ot:"Ezra, Nehemiah & Job",nt:"1 Thess–Philemon",theme:"Perseverance & suffering",weeks:[
+    {days:"1–7",ot:"Ezra 1–10",nt:"1 & 2 Thessalonians"},
+    {days:"8–14",ot:"Nehemiah 1–13",nt:"1 & 2 Timothy"},
+    {days:"15–21",ot:"Job 1–21",nt:"Titus & Philemon"},
+    {days:"22–30",ot:"Job 22–42",nt:"Review & reflect"}]},
+  {ot:"Psalms 1–75",nt:"Hebrews & James",theme:"Praise & practical faith",weeks:[
+    {days:"1–7",ot:"Psalms 1–19",nt:"Hebrews 1–7"},
+    {days:"8–14",ot:"Psalms 20–41",nt:"Hebrews 8–13"},
+    {days:"15–21",ot:"Psalms 42–60",nt:"James 1–5"},
+    {days:"22–31",ot:"Psalms 61–75",nt:"Review & memorize"}]},
+  {ot:"Psalms 76–150 & Proverbs",nt:"1 Peter–Jude",theme:"Wisdom & letters",weeks:[
+    {days:"1–7",ot:"Psalms 76–103",nt:"1 Peter 1–5"},
+    {days:"8–14",ot:"Psalms 104–119",nt:"2 Peter, 1 John"},
+    {days:"15–21",ot:"Psalms 120–150",nt:"2 John, 3 John, Jude"},
+    {days:"22–30",ot:"Proverbs 1–31",nt:"Review & reflect"}]},
+  {ot:"Ecclesiastes, Song of Solomon & Isaiah 1–35",nt:"Revelation",theme:"Hope & prophecy",weeks:[
+    {days:"1–7",ot:"Ecclesiastes 1–12",nt:"Revelation 1–5"},
+    {days:"8–14",ot:"Song of Solomon 1–8",nt:"Revelation 6–11"},
+    {days:"15–21",ot:"Isaiah 1–18",nt:"Revelation 12–17"},
+    {days:"22–31",ot:"Isaiah 19–35",nt:"Revelation 18–22"}]}
+];
+
+const VERSES=[
+  {text:"Your word is a lamp for my feet, a light on my path.",ref:"Psalm 119:105"},
+  {text:"Let the word of Christ dwell in you richly, teaching and admonishing one another in all wisdom.",ref:"Colossians 3:16"},
+  {text:"All Scripture is God-breathed and is useful for teaching, rebuking, correcting and training in righteousness.",ref:"2 Timothy 3:16"},
+  {text:"Blessed is the one whose delight is in the law of the Lord, and who meditates on his law day and night.",ref:"Psalm 1:1-2"},
+  {text:"Do not merely listen to the word — do what it says.",ref:"James 1:22"},
+  {text:"For the word of God is alive and active. Sharper than any double-edged sword.",ref:"Hebrews 4:12"},
+  {text:"I have hidden your word in my heart that I might not sin against you.",ref:"Psalm 119:11"},
+  {text:"Two are better than one, because they have a good return for their labor.",ref:"Ecclesiastes 4:9"},
+  {text:"Where two or three gather in my name, there am I with them.",ref:"Matthew 18:20"},
+  {text:"Let us consider how we may spur one another on toward love and good deeds.",ref:"Hebrews 10:24"},
+  {text:"Husbands, love your wives, just as Christ loved the church and gave himself up for her.",ref:"Ephesians 5:25"},
+  {text:"Above all, love each other deeply, because love covers over a multitude of sins.",ref:"1 Peter 4:8"},
+];
+
+let data={p1Name:"Melvin",p2Name:"Monique",days:{}};
+let viewYear,viewMonth,selectedKey=null;
+const today=new Date();
+const todayKey=fmt(today);
+let resetPending=false;
+
+function fmt(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
+
+async function loadData(){
+  try{
+    const raw=localStorage.getItem('bible_study_v2');
+    if(raw)data=JSON.parse(raw);
+  }catch(e){console.warn('Could not load saved tracker data',e);}
+}
+async function saveData(){
+  try{localStorage.setItem('bible_study_v2',JSON.stringify(data));}
+  catch(e){console.warn('Could not save tracker data',e);}
+}
+
+function calcStreak(person){
+  const allKeys=Object.keys(data.days).sort();
+  const keys=allKeys.filter(k=>data.days[k]&&data.days[k][person]);
+  if(!keys.length)return{current:0,longest:0};
+  let longest=1,cur=1;
+  for(let i=1;i<keys.length;i++){
+    const diff=Math.round((new Date(keys[i]+'T12:00:00')-new Date(keys[i-1]+'T12:00:00'))/86400000);
+    if(diff===1){cur++;if(cur>longest)longest=cur;}else cur=1;
+  }
+  const diff=Math.round((new Date(todayKey+'T12:00:00')-new Date(keys[keys.length-1]+'T12:00:00'))/86400000);
+  let current=0;
+  if(diff<=1){
+    current=1;
+    for(let i=keys.length-2;i>=0;i--){
+      if(Math.round((new Date(keys[i+1]+'T12:00:00')-new Date(keys[i]+'T12:00:00'))/86400000)===1)current++;
+      else break;
+    }
+  }
+  return{current,longest:Math.max(longest,current)};
+}
+
+function calcTogetherStreak(){
+  const keys=Object.keys(data.days).filter(k=>data.days[k]&&data.days[k].p1&&data.days[k].p2).sort();
+  if(!keys.length)return 0;
+  const diff=Math.round((new Date(todayKey+'T12:00:00')-new Date(keys[keys.length-1]+'T12:00:00'))/86400000);
+  if(diff>1)return 0;
+  let current=1;
+  for(let i=keys.length-2;i>=0;i--){
+    if(Math.round((new Date(keys[i+1]+'T12:00:00')-new Date(keys[i]+'T12:00:00'))/86400000)===1)current++;
+    else break;
+  }
+  return current;
+}
+
+function renderStats(){
+  const p1=calcStreak('p1'),p2=calcStreak('p2'),tog=calcTogetherStreak();
+  const togTotal=Object.keys(data.days).filter(k=>data.days[k]&&data.days[k].p1&&data.days[k].p2).length;
+  const n1=data.p1Name||'Person 1',n2=data.p2Name||'Person 2';
+  document.getElementById('statsRow').innerHTML=`
+    <div class="stat"><div class="slbl">${n1}'s streak</div><div class="sval fire">${p1.current}d</div></div>
+    <div class="stat"><div class="slbl">${n2}'s streak</div><div class="sval fire">${p2.current}d</div></div>
+    <div class="stat"><div class="slbl">Together streak</div><div class="sval fire">${tog}d</div></div>
+    <div class="stat"><div class="slbl">Days together</div><div class="sval">${togTotal}</div></div>`;
+  document.getElementById('p1leg').textContent=n1;
+  document.getElementById('p2leg').textContent=n2;
+}
+
+function renderCalendar(){
+  document.getElementById('monthTitle').textContent=`${MONTHS[viewMonth]} ${viewYear}`;
+  const grid=document.getElementById('calGrid');
+  grid.innerHTML='';
+  const firstDay=new Date(viewYear,viewMonth,1).getDay();
+  const dim=new Date(viewYear,viewMonth+1,0).getDate();
+  for(let i=0;i<firstDay;i++){const e=document.createElement('div');e.className='day emp';grid.appendChild(e);}
+  for(let d=1;d<=dim;d++){
+    const key=`${viewYear}-${String(viewMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const cd=new Date(viewYear,viewMonth,d);
+    const isT=key===todayKey,isF=cd>today&&!isT;
+    const dd=data.days[key]||{};
+    const hasBoth=dd.p1&&dd.p2,hasOne=(dd.p1||dd.p2)&&!hasBoth,hasNote=dd.note&&dd.note.trim();
+    const el=document.createElement('div');
+    let cls='day';
+    if(hasBoth)cls+=' both';else if(hasOne)cls+=' part';
+    if(isT)cls+=' tod';if(isF)cls+=' fut';if(key===selectedKey)cls+=' sel';
+    el.className=cls;
+    el.innerHTML=`<span>${d}</span><div class="dots"><div class="dot${dd.p1?' d1':''}"></div><div class="dot${dd.p2?' d2':''}"></div></div>${hasNote?'<div class="ndot"></div>':''}`;
+    if(!isF)el.onclick=()=>selectDay(key);
+    grid.appendChild(el);
+  }
+}
+
+function selectDay(key){
+  selectedKey=key;
+  renderCalendar();
+  const dd=data.days[key]||{p1:false,p2:false,note:''};
+  const parts=key.split('-');
+  const d=new Date(parseInt(parts[0]),parseInt(parts[1])-1,parseInt(parts[2]));
+  document.getElementById('dpTitle').textContent=d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+  const n1=data.p1Name||'Person 1',n2=data.p2Name||'Person 2';
+  document.getElementById('p1Btn').className='pchk'+(dd.p1?' a1':'');
+  document.getElementById('p2Btn').className='pchk'+(dd.p2?' a2':'');
+  document.getElementById('p1BtnLbl').textContent=(dd.p1?'✓ ':'')+n1;
+  document.getElementById('p2BtnLbl').textContent=(dd.p2?'✓ ':'')+n2;
+  document.getElementById('noteArea').value=dd.note||'';
+  document.getElementById('saveMsg').textContent='';
+  document.getElementById('dayPanel').style.display='block';
+}
+
+function closePanel(){selectedKey=null;document.getElementById('dayPanel').style.display='none';renderCalendar();}
+
+async function togglePerson(p){
+  if(!selectedKey)return;
+  if(!data.days[selectedKey])data.days[selectedKey]={p1:false,p2:false,note:''};
+  const k=p===1?'p1':'p2';
+  data.days[selectedKey][k]=!data.days[selectedKey][k];
+  await saveData();renderStats();renderCalendar();selectDay(selectedKey);
+}
+
+async function saveNote(){
+  if(!selectedKey)return;
+  if(!data.days[selectedKey])data.days[selectedKey]={p1:false,p2:false,note:''};
+  data.days[selectedKey].note=document.getElementById('noteArea').value;
+  await saveData();renderCalendar();
+  const m=document.getElementById('saveMsg');m.textContent='Saved!';
+  setTimeout(()=>m.textContent='',2000);
+}
+
+function changeMonth(dir){
+  viewMonth+=dir;
+  if(viewMonth<0){viewMonth=11;viewYear--;}
+  if(viewMonth>11){viewMonth=0;viewYear++;}
+  closePanel();renderCalendar();renderReadingPlan();
+}
+
+function renderReadingPlan(){
+  const plan=PLAN[viewMonth];
+  document.getElementById('rpTitle').textContent=`${MONTHS[viewMonth]} ${viewYear}`;
+  document.getElementById('rpTheme').innerHTML=`<i class="ti ti-sparkles" aria-hidden="true"></i> Theme: <em>${plan.theme}</em>`;
+  document.getElementById('bookCards').innerHTML=`
+    <div class="bkcard"><div class="bktype"><i class="ti ti-book-2" aria-hidden="true"></i> Old Testament</div><div class="bkname">${plan.ot}</div></div>
+    <div class="bkcard"><div class="bktype"><i class="ti ti-book" aria-hidden="true"></i> New Testament</div><div class="bkname">${plan.nt}</div></div>`;
+  const dim=new Date(viewYear,viewMonth+1,0).getDate();
+  const daysDone=Array.from({length:dim},(_,i)=>{
+    const k=`${viewYear}-${String(viewMonth+1).padStart(2,'0')}-${String(i+1).padStart(2,'0')}`;
+    return (data.days[k]&&(data.days[k].p1||data.days[k].p2))?1:0;
+  }).reduce((a,b)=>a+b,0);
+  const pct=Math.round(daysDone/dim*100);
+  document.getElementById('progLabel').textContent=`${daysDone}/${dim} days`;
+  document.getElementById('progFill').style.width=pct+'%';
+  const d=today.getDate(),m=today.getMonth(),y=today.getFullYear();
+  let html='';
+  plan.weeks.forEach((w,i)=>{
+    const [s,e]=w.days.split('–').map(Number);
+    const end=e||s+6;
+    const isCW=viewMonth===m&&viewYear===y&&d>=s&&d<=end;
+    html+=`<div class="witem${isCW?' cw':''}">
+      <div class="wnum${isCW?' cw':''}">Week ${i+1} · Days ${w.days}${isCW?' · <strong>This week</strong>':''}</div>
+      <div class="wread"><span class="wtag">OT</span> ${w.ot}<br><span class="wtag">NT</span> ${w.nt}</div>
+    </div>`;
+  });
+  document.getElementById('weekList').innerHTML=html;
+}
+
+function renderVerse(){
+  const v=VERSES[today.getDate()%VERSES.length];
+  document.getElementById('verseText').textContent=`"${v.text}"`;
+  document.getElementById('verseRef').textContent=`— ${v.ref}`;
+}
+
+function switchTab(tab,btn){
+  document.querySelectorAll('.pane').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.tb').forEach(b=>b.classList.remove('on'));
+  document.getElementById('tab-'+tab).classList.add('on');
+  btn.classList.add('on');
+}
+
+async function saveNames(){
+  data.p1Name=document.getElementById('p1NameInput').value.trim()||'Person 1';
+  data.p2Name=document.getElementById('p2NameInput').value.trim()||'Person 2';
+  await saveData();renderStats();renderCalendar();
+  const c=document.getElementById('nameConfirm');c.textContent='Names saved!';
+  setTimeout(()=>c.textContent='',2500);
+}
+
+async function resetData(){
+  if(!resetPending){
+    resetPending=true;
+    const c=document.getElementById('resetConfirm');
+    c.style.color='#BA7517';c.textContent='Tap again to confirm reset. This cannot be undone.';
+    setTimeout(()=>{resetPending=false;c.textContent='';},4000);
+    return;
+  }
+  data.days={};await saveData();
+  renderStats();renderCalendar();renderReadingPlan();closePanel();
+  resetPending=false;
+  const c=document.getElementById('resetConfirm');
+  c.style.color='#3B6D11';c.textContent='Progress reset.';
+  setTimeout(()=>c.textContent='',2500);
+}
+
+function exportData(){
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download='bible-study-tracker-backup.json';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+async function importData(event){
+  const file=event.target.files&&event.target.files[0];
+  if(!file)return;
+  try{
+    const imported=JSON.parse(await file.text());
+    if(!imported || typeof imported!=='object' || !imported.days) throw new Error('Invalid backup file');
+    data={p1Name:imported.p1Name||'Person 1',p2Name:imported.p2Name||'Person 2',days:imported.days||{}};
+    await saveData();
+    document.getElementById('p1NameInput').value=data.p1Name;
+    document.getElementById('p2NameInput').value=data.p2Name;
+    renderStats();renderCalendar();renderReadingPlan();closePanel();
+    const c=document.getElementById('resetConfirm');c.style.color='#3B6D11';c.textContent='Backup imported.';
+    setTimeout(()=>c.textContent='',2500);
+  }catch(e){
+    const c=document.getElementById('resetConfirm');c.style.color='#BA7517';c.textContent='Import failed. Please choose a valid backup file.';
+  }
+  event.target.value='';
+}
+
+let deferredPrompt=null;
+window.addEventListener('beforeinstallprompt',(e)=>{
+  e.preventDefault();
+  deferredPrompt=e;
+  const btn=document.getElementById('installBtn');
+  if(btn)btn.style.display='inline-flex';
+});
+window.addEventListener('appinstalled',()=>{
+  deferredPrompt=null;
+  const btn=document.getElementById('installBtn');
+  if(btn)btn.style.display='none';
+});
+
+async function init(){
+  const installBtn=document.getElementById('installBtn');
+  if(installBtn){installBtn.addEventListener('click',async()=>{if(!deferredPrompt)return;deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;installBtn.style.display='none';});}
+  viewYear=today.getFullYear();viewMonth=today.getMonth();
+  await loadData();
+  document.getElementById('p1NameInput').value=data.p1Name||'Melvin';
+  document.getElementById('p2NameInput').value=data.p2Name||'Monique';
+  renderStats();renderCalendar();renderReadingPlan();renderVerse();
+}
+init();
+</script>
+<script>
+if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(console.warn));}
+</script>
+</body>
+</html>
