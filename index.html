@@ -109,6 +109,19 @@ h1{font-size:clamp(28px,4vw,44px);line-height:1.05;margin:0 0 8px}
 .sep{border:none;border-top:0.5px solid var(--color-border-tertiary);margin:1.25rem 0}
 .prog-bar{height:6px;background:var(--color-border-tertiary);border-radius:3px;margin-top:8px;overflow:hidden}
 .prog-fill{height:100%;background:#534AB7;border-radius:3px;transition:width 0.3s}
+.readbox{background:#fffaf2;border:0.5px solid var(--color-border-tertiary);border-left:3px solid #BA7517;border-radius:var(--border-radius-md);padding:12px 14px;margin-bottom:1.25rem}
+.readbox.compact{margin-top:12px;margin-bottom:12px}
+.readlbl{font-size:11px;color:var(--color-text-secondary);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em;font-weight:700}
+.readmain{font-size:15px;font-weight:600;color:var(--color-text-primary);margin-bottom:6px}
+.readsub{font-size:12px;color:var(--color-text-secondary);line-height:1.5;margin-bottom:8px}
+.takeaways{margin:0;padding-left:18px;color:var(--color-text-primary);font-size:13px;line-height:1.55}
+.takeaways li{margin-bottom:4px}
+.daily-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px}
+.ditem{border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:9px 12px;background:rgba(255,255,255,.55)}
+.ditem.today{border-color:#534AB7;background:#EEEDFE}
+.ditem.done{border-color:#3B6D11;background:#EAF3DE}
+.dnum{font-size:11px;color:var(--color-text-secondary);margin-bottom:3px}
+.dread{font-size:13px;color:var(--color-text-primary);font-weight:500;line-height:1.35}
 </style>
 </head>
 <body>
@@ -161,6 +174,7 @@ h1{font-size:clamp(28px,4vw,44px);line-height:1.05;margin:0 0 8px}
       <button class="pchk" id="p1Btn" onclick="togglePerson(1)"><i class="ti ti-book-2" aria-hidden="true"></i> <span id="p1BtnLbl">Person 1</span></button>
       <button class="pchk" id="p2Btn" onclick="togglePerson(2)"><i class="ti ti-book-2" aria-hidden="true"></i> <span id="p2BtnLbl">Person 2</span></button>
     </div>
+    <div id="dayReadingBox" class="readbox compact"></div>
     <div class="nlbl"><i class="ti ti-pencil" aria-hidden="true"></i> Session notes</div>
     <textarea class="ntxt" id="noteArea" placeholder="What did you study? Any reflections, prayers, or takeaways..."></textarea>
     <div class="row-btns">
@@ -189,7 +203,8 @@ h1{font-size:clamp(28px,4vw,44px);line-height:1.05;margin:0 0 8px}
     </div>
     <div class="prog-bar"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
   </div>
-  <div class="wtitle">Weekly reading schedule</div>
+  <div class="readbox" id="selectedReadingBox"></div>
+  <div class="wtitle">Daily reading schedule</div>
   <div id="weekList"></div>
 </div>
 
@@ -224,68 +239,112 @@ h1{font-size:clamp(28px,4vw,44px);line-height:1.05;margin:0 0 8px}
 <script>
 const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
 
-const PLAN=[
-  {ot:"Genesis",nt:"Matthew",theme:"Creation & new beginnings",weeks:[
-    {days:"1–7",ot:"Genesis 1–12",nt:"Matthew 1–7"},
-    {days:"8–14",ot:"Genesis 13–25",nt:"Matthew 8–14"},
-    {days:"15–21",ot:"Genesis 26–37",nt:"Matthew 15–21"},
-    {days:"22–31",ot:"Genesis 38–50",nt:"Matthew 22–28"}]},
-  {ot:"Exodus",nt:"Mark",theme:"Deliverance & God's power",weeks:[
-    {days:"1–7",ot:"Exodus 1–10",nt:"Mark 1–4"},
-    {days:"8–14",ot:"Exodus 11–20",nt:"Mark 5–8"},
-    {days:"15–21",ot:"Exodus 21–32",nt:"Mark 9–12"},
-    {days:"22–28",ot:"Exodus 33–40",nt:"Mark 13–16"}]},
-  {ot:"Leviticus & Numbers",nt:"Luke",theme:"Holiness & the journey",weeks:[
-    {days:"1–7",ot:"Leviticus 1–14",nt:"Luke 1–6"},
-    {days:"8–14",ot:"Leviticus 15–27",nt:"Luke 7–12"},
-    {days:"15–21",ot:"Numbers 1–18",nt:"Luke 13–18"},
-    {days:"22–31",ot:"Numbers 19–36",nt:"Luke 19–24"}]},
-  {ot:"Deuteronomy",nt:"John",theme:"Covenant & identity",weeks:[
-    {days:"1–7",ot:"Deuteronomy 1–9",nt:"John 1–5"},
-    {days:"8–14",ot:"Deuteronomy 10–19",nt:"John 6–10"},
-    {days:"15–21",ot:"Deuteronomy 20–28",nt:"John 11–15"},
-    {days:"22–30",ot:"Deuteronomy 29–34",nt:"John 16–21"}]},
-  {ot:"Joshua & Judges",nt:"Acts",theme:"Entering the land & early church",weeks:[
-    {days:"1–7",ot:"Joshua 1–12",nt:"Acts 1–7"},
-    {days:"8–14",ot:"Joshua 13–24",nt:"Acts 8–14"},
-    {days:"15–21",ot:"Judges 1–10",nt:"Acts 15–21"},
-    {days:"22–31",ot:"Judges 11–21",nt:"Acts 22–28"}]},
-  {ot:"Ruth & 1–2 Samuel",nt:"Romans",theme:"Faithfulness & righteousness",weeks:[
-    {days:"1–7",ot:"Ruth 1–4, 1 Samuel 1–5",nt:"Romans 1–4"},
-    {days:"8–14",ot:"1 Samuel 6–18",nt:"Romans 5–9"},
-    {days:"15–21",ot:"1 Samuel 19–31",nt:"Romans 10–13"},
-    {days:"22–30",ot:"2 Samuel 1–24",nt:"Romans 14–16"}]},
-  {ot:"1–2 Kings",nt:"1–2 Corinthians",theme:"Rise & fall of kingdoms",weeks:[
-    {days:"1–7",ot:"1 Kings 1–12",nt:"1 Corinthians 1–7"},
-    {days:"8–14",ot:"1 Kings 13–22",nt:"1 Corinthians 8–16"},
-    {days:"15–21",ot:"2 Kings 1–12",nt:"2 Corinthians 1–7"},
-    {days:"22–31",ot:"2 Kings 13–25",nt:"2 Corinthians 8–13"}]},
-  {ot:"1–2 Chronicles",nt:"Galatians–Colossians",theme:"Heritage & freedom in Christ",weeks:[
-    {days:"1–7",ot:"1 Chronicles 1–15",nt:"Galatians 1–6"},
-    {days:"8–14",ot:"1 Chronicles 16–29",nt:"Ephesians 1–6"},
-    {days:"15–21",ot:"2 Chronicles 1–18",nt:"Philippians 1–4, Colossians 1–2"},
-    {days:"22–31",ot:"2 Chronicles 19–36",nt:"Colossians 3–4"}]},
-  {ot:"Ezra, Nehemiah & Job",nt:"1 Thess–Philemon",theme:"Perseverance & suffering",weeks:[
-    {days:"1–7",ot:"Ezra 1–10",nt:"1 & 2 Thessalonians"},
-    {days:"8–14",ot:"Nehemiah 1–13",nt:"1 & 2 Timothy"},
-    {days:"15–21",ot:"Job 1–21",nt:"Titus & Philemon"},
-    {days:"22–30",ot:"Job 22–42",nt:"Review & reflect"}]},
-  {ot:"Psalms 1–75",nt:"Hebrews & James",theme:"Praise & practical faith",weeks:[
-    {days:"1–7",ot:"Psalms 1–19",nt:"Hebrews 1–7"},
-    {days:"8–14",ot:"Psalms 20–41",nt:"Hebrews 8–13"},
-    {days:"15–21",ot:"Psalms 42–60",nt:"James 1–5"},
-    {days:"22–31",ot:"Psalms 61–75",nt:"Review & memorize"}]},
-  {ot:"Psalms 76–150 & Proverbs",nt:"1 Peter–Jude",theme:"Wisdom & letters",weeks:[
-    {days:"1–7",ot:"Psalms 76–103",nt:"1 Peter 1–5"},
-    {days:"8–14",ot:"Psalms 104–119",nt:"2 Peter, 1 John"},
-    {days:"15–21",ot:"Psalms 120–150",nt:"2 John, 3 John, Jude"},
-    {days:"22–30",ot:"Proverbs 1–31",nt:"Review & reflect"}]},
-  {ot:"Ecclesiastes, Song of Solomon & Isaiah 1–35",nt:"Revelation",theme:"Hope & prophecy",weeks:[
-    {days:"1–7",ot:"Ecclesiastes 1–12",nt:"Revelation 1–5"},
-    {days:"8–14",ot:"Song of Solomon 1–8",nt:"Revelation 6–11"},
-    {days:"15–21",ot:"Isaiah 1–18",nt:"Revelation 12–17"},
-    {days:"22–31",ot:"Isaiah 19–35",nt:"Revelation 18–22"}]}
+const BIBLE_BOOKS=[
+  {book:"Genesis",chapters:50,theme:"Beginnings, covenant, family, faith",takeaways:["God creates with purpose and order.","Faith is built through obedience, patience, and trust.","Family dysfunction does not stop God’s covenant plan."]},
+  {book:"Exodus",chapters:40,theme:"Deliverance, worship, covenant",takeaways:["God hears His people and acts in His timing.","Deliverance is followed by formation and obedience.","Worship requires reverence, structure, and surrender."]},
+  {book:"Leviticus",chapters:27,theme:"Holiness, sacrifice, worship",takeaways:["God cares deeply about holiness and nearness.","Sacrifice points to the cost of sin and need for atonement.","Daily life and worship are connected."]},
+  {book:"Numbers",chapters:36,theme:"Wilderness, trust, discipline",takeaways:["Delayed obedience can turn a short journey into a long season.","God remains faithful even when people struggle with faithfulness.","Leadership requires patience, courage, and dependence on God."]},
+  {book:"Deuteronomy",chapters:34,theme:"Covenant renewal, remembrance, obedience",takeaways:["Remembering what God has done strengthens obedience today.","Love for God is shown through faithful living.","Choices have spiritual consequences."]},
+  {book:"Joshua",chapters:24,theme:"Promise, courage, possession",takeaways:["God’s promises still require faithful action.","Courage grows when God’s Word stays central.","A household can choose to serve the Lord with intention."]},
+  {book:"Judges",chapters:21,theme:"Cycles, compromise, need for rescue",takeaways:["Compromise creates repeated cycles of decline.","God shows mercy even when people repeatedly drift.","The absence of godly leadership creates confusion."]},
+  {book:"Ruth",chapters:4,theme:"Loyalty, redemption, providence",takeaways:["Faithfulness in ordinary decisions matters.","God works quietly through loyalty and integrity.","Redemption often comes through unexpected people and places."]},
+  {book:"1 Samuel",chapters:31,theme:"Leadership, obedience, kingdom",takeaways:["God looks at the heart more than outward appearance.","Obedience matters more than image or position.","Waiting well is part of spiritual maturity."]},
+  {book:"2 Samuel",chapters:24,theme:"Kingdom, sin, mercy",takeaways:["Even strong leaders need accountability.","Sin carries consequences, but repentance opens the door to mercy.","God’s covenant faithfulness is bigger than human failure."]},
+  {book:"1 Kings",chapters:22,theme:"Wisdom, worship, divided hearts",takeaways:["Wisdom must be guarded by continued obedience.","A divided heart eventually produces divided outcomes.","God’s voice remains true even when culture resists it."]},
+  {book:"2 Kings",chapters:25,theme:"Decline, judgment, exile",takeaways:["Persistent disobedience eventually bears fruit.","God sends warnings before judgment.","Hope remains because God’s promises are not forgotten."]},
+  {book:"1 Chronicles",chapters:29,theme:"Heritage, worship, Davidic promise",takeaways:["History reminds God’s people who they are.","Worship and preparation matter across generations.","Leadership is stewardship before God."]},
+  {book:"2 Chronicles",chapters:36,theme:"Kings, reform, faithfulness",takeaways:["Spiritual renewal starts with returning to God.","Leaders shape the spiritual direction of people.","God honors humility and repentance."]},
+  {book:"Ezra",chapters:10,theme:"Return, rebuilding, reform",takeaways:["Rebuilding begins with worship and obedience.","God can restore what looked lost.","Courage is needed to rebuild under pressure."]},
+  {book:"Nehemiah",chapters:13,theme:"Rebuilding, prayer, perseverance",takeaways:["Prayer and planning belong together.","Opposition is expected when rebuilding matters.","Sustained reform requires both structure and spiritual commitment."]},
+  {book:"Esther",chapters:10,theme:"Providence, courage, deliverance",takeaways:["God is working even when He is not directly named.","Courage often requires risking comfort for calling.","Your position can be used for someone else’s deliverance."]},
+  {book:"Job",chapters:42,theme:"Suffering, worship, trust",takeaways:["Suffering is not always explained by simple cause and effect.","Honest questions can still be held in reverence before God.","God’s wisdom is greater than human understanding."]},
+  {book:"Psalms",chapters:150,theme:"Prayer, worship, lament, praise",takeaways:["God invites honest prayer, including pain and joy.","Worship re-centers the heart on who God is.","Praise can be a discipline before it becomes a feeling."]},
+  {book:"Proverbs",chapters:31,theme:"Wisdom, discipline, character",takeaways:["Wisdom is practical, daily, and relational.","The fear of the Lord is the foundation for good decisions.","Character is built through repeated choices."]},
+  {book:"Ecclesiastes",chapters:12,theme:"Meaning, limits, eternity",takeaways:["Life without God cannot carry ultimate meaning.","Wisdom includes accepting human limits.","Enjoyment is a gift when received with reverence."]},
+  {book:"Song of Solomon",chapters:8,theme:"Love, desire, covenant",takeaways:["Covenant love is worth honoring and protecting.","God’s design includes beauty, delight, and commitment.","Love matures through patience and faithfulness."]},
+  {book:"Isaiah",chapters:66,theme:"Holiness, judgment, hope, Messiah",takeaways:["God is holy and calls His people back to Him.","Judgment and hope often appear together.","God’s promised salvation reaches beyond one nation."]},
+  {book:"Jeremiah",chapters:52,theme:"Warning, grief, new covenant",takeaways:["Faithfulness can be lonely but necessary.","God sees both public sin and private motives.","Even in judgment, God promises restoration."]},
+  {book:"Lamentations",chapters:5,theme:"Grief, loss, mercy",takeaways:["Grief can be brought directly before God.","God’s mercies remain real in seasons of loss.","Hope can begin with remembering God’s character."]},
+  {book:"Ezekiel",chapters:48,theme:"Glory, judgment, restoration",takeaways:["God’s presence is the center of true restoration.","Spiritual renewal requires a new heart.","God can breathe life into what appears dead."]},
+  {book:"Daniel",chapters:12,theme:"Faithfulness in exile, sovereignty",takeaways:["Conviction can survive in a hostile culture.","God rules over kingdoms and seasons.","Faithfulness is formed before the test arrives."]},
+  {book:"Hosea",chapters:14,theme:"Faithful love, unfaithfulness, return",takeaways:["God’s love pursues people who wander.","Unfaithfulness wounds relationship, not just rules.","Return is always better than hiding."]},
+  {book:"Joel",chapters:3,theme:"Repentance, Spirit, restoration",takeaways:["God calls His people to wholehearted return.","Restoration follows repentance in God’s timing.","God’s Spirit is promised for His people."]},
+  {book:"Amos",chapters:9,theme:"Justice, worship, accountability",takeaways:["God rejects worship disconnected from justice.","Comfort can blind people to spiritual danger.","Accountability is part of covenant relationship."]},
+  {book:"Obadiah",chapters:1,theme:"Pride, justice, restoration",takeaways:["Pride makes people blind to coming judgment.","God sees how nations treat one another.","The Lord’s kingdom will ultimately stand."]},
+  {book:"Jonah",chapters:4,theme:"Mercy, mission, repentance",takeaways:["God’s mercy is wider than human preference.","Running from calling does not remove responsibility.","Repentance can happen in unexpected places."]},
+  {book:"Micah",chapters:7,theme:"Justice, mercy, humble walking",takeaways:["God desires justice, mercy, and humility.","Spiritual talk must be matched by righteous living.","Hope remains because God pardons and restores."]},
+  {book:"Nahum",chapters:3,theme:"Justice, refuge, judgment",takeaways:["God is patient, but evil is not ignored forever.","The Lord is a refuge for those who trust Him.","Oppression will not have the final word."]},
+  {book:"Habakkuk",chapters:3,theme:"Questions, faith, waiting",takeaways:["Faith can ask hard questions without walking away.","God’s timing may be mysterious, but His justice stands.","The righteous live by faith."]},
+  {book:"Zephaniah",chapters:3,theme:"Judgment, remnant, joy",takeaways:["God purifies what He intends to restore.","A humble remnant matters to God.","God rejoices over His people with love."]},
+  {book:"Haggai",chapters:2,theme:"Priorities, rebuilding, obedience",takeaways:["Misplaced priorities can stall spiritual progress.","Small beginnings still matter to God.","Obedience today prepares the way for future glory."]},
+  {book:"Zechariah",chapters:14,theme:"Encouragement, restoration, coming King",takeaways:["God strengthens weary builders with future hope.","Restoration is both spiritual and practical.","The coming King brings final peace and holiness."]},
+  {book:"Malachi",chapters:4,theme:"Covenant faithfulness, worship, return",takeaways:["God cares about the sincerity of worship.","Faithfulness matters in giving, marriage, and leadership.","God calls His people to return before renewal."]},
+  {book:"Matthew",chapters:28,theme:"Kingdom, discipleship, fulfillment",takeaways:["Jesus fulfills the promises and reveals the Kingdom.","Discipleship touches the heart, not only behavior.","The mission is to make disciples, not just gather believers."]},
+  {book:"Mark",chapters:16,theme:"Servant King, urgency, faith",takeaways:["Jesus moves with authority and compassion.","Following Jesus requires action, not spectatorship.","The cross redefines power and greatness."]},
+  {book:"Luke",chapters:24,theme:"Compassion, salvation, outsiders",takeaways:["Jesus notices people others overlook.","Salvation brings joy, reversal, and mercy.","Prayer and the Spirit shape faithful witness."]},
+  {book:"John",chapters:21,theme:"Belief, life, identity of Christ",takeaways:["Jesus reveals the heart of the Father.","Belief is personal trust, not just agreement.","Life is found in abiding in Christ."]},
+  {book:"Acts",chapters:28,theme:"Spirit, church, mission",takeaways:["The Holy Spirit empowers ordinary people for witness.","The gospel moves across boundaries.","Opposition can become a platform for mission."]},
+  {book:"Romans",chapters:16,theme:"Grace, righteousness, gospel",takeaways:["Righteousness comes by faith, not performance.","Grace changes identity and behavior.","The gospel creates a new kind of community."]},
+  {book:"1 Corinthians",chapters:16,theme:"Church life, holiness, love",takeaways:["Giftedness does not replace maturity.","Love is the measure of spiritual strength.","The resurrection gives meaning to faithful labor."]},
+  {book:"2 Corinthians",chapters:13,theme:"Weakness, ministry, generosity",takeaways:["God’s strength is displayed through human weakness.","Ministry requires sincerity, endurance, and comfort from God.","Generosity flows from grace."]},
+  {book:"Galatians",chapters:6,theme:"Freedom, grace, Spirit",takeaways:["The gospel frees us from earning what God gives by grace.","Freedom is not selfishness; it is Spirit-led love.","What we sow spiritually matters."]},
+  {book:"Ephesians",chapters:6,theme:"Identity, unity, spiritual warfare",takeaways:["Identity in Christ comes before activity for Christ.","Unity is a calling to practice, not just a belief to hold.","Spiritual strength comes from putting on God’s armor."]},
+  {book:"Philippians",chapters:4,theme:"Joy, humility, perseverance",takeaways:["Joy can be rooted deeper than circumstances.","Christlike humility reshapes ambition.","Contentment is learned through dependence on Christ."]},
+  {book:"Colossians",chapters:4,theme:"Supremacy of Christ, new life",takeaways:["Christ is sufficient and supreme over all things.","New identity should produce new habits.","Faithfulness shows up in homes, work, and speech."]},
+  {book:"1 Thessalonians",chapters:5,theme:"Faithfulness, encouragement, hope",takeaways:["A healthy church encourages steady growth.","Hope in Christ’s return strengthens endurance.","Holiness is part of love and witness."]},
+  {book:"2 Thessalonians",chapters:3,theme:"Endurance, clarity, responsibility",takeaways:["Hope should steady, not confuse, believers.","Faithfulness continues while waiting on the Lord.","Community includes encouragement and responsibility."]},
+  {book:"1 Timothy",chapters:6,theme:"Leadership, doctrine, godliness",takeaways:["Healthy teaching protects healthy living.","Leadership requires character before platform.","Godliness with contentment is great gain."]},
+  {book:"2 Timothy",chapters:4,theme:"Endurance, Scripture, faithful ministry",takeaways:["Scripture equips God’s people for every good work.","Faithfulness matters even when seasons are difficult.","Finish the race with courage and conviction."]},
+  {book:"Titus",chapters:3,theme:"Good works, order, grace",takeaways:["Grace trains believers to live differently.","Leadership should produce healthy community life.","Good works are fruit of salvation, not the root of it."]},
+  {book:"Philemon",chapters:1,theme:"Forgiveness, reconciliation, brotherhood",takeaways:["The gospel reshapes relationships and obligations.","Forgiveness may require costly love.","People are more than their past mistakes."]},
+  {book:"Hebrews",chapters:13,theme:"Christ’s superiority, endurance, faith",takeaways:["Jesus is better than every temporary substitute.","Faith perseveres because God is faithful.","Draw near to God with confidence through Christ."]},
+  {book:"James",chapters:5,theme:"Practical faith, wisdom, works",takeaways:["Real faith becomes visible in daily life.","Words, money, and trials reveal spiritual maturity.","Wisdom is shown by humility and action."]},
+  {book:"1 Peter",chapters:5,theme:"Suffering, hope, holiness",takeaways:["Hope in Christ helps believers endure pressure.","Holiness is a witness in a watching world.","Suffering does not cancel calling."]},
+  {book:"2 Peter",chapters:3,theme:"Growth, truth, readiness",takeaways:["Spiritual growth requires intentional practice.","Truth protects against destructive deception.","The Lord’s patience is meant to lead people to repentance."]},
+  {book:"1 John",chapters:5,theme:"Love, assurance, fellowship",takeaways:["Love is evidence of life with God.","Assurance rests in Christ, not perfection.","Light and darkness cannot be treated as the same."]},
+  {book:"2 John",chapters:1,theme:"Truth and love",takeaways:["Christian love must stay rooted in truth.","Discernment protects the community.","Faithfulness includes guarding what has been taught."]},
+  {book:"3 John",chapters:1,theme:"Hospitality, truth, leadership",takeaways:["Faithfulness can be seen in how we support good work.","Pride damages spiritual community.","Walk in truth even when others do not."]},
+  {book:"Jude",chapters:1,theme:"Contending, mercy, perseverance",takeaways:["Truth is worth defending with humility.","Mercy and discernment belong together.","God is able to keep His people from falling."]},
+  {book:"Revelation",chapters:22,theme:"Victory, worship, new creation",takeaways:["Jesus reigns over history and the future.","Faithful endurance matters because the Lamb wins.","God’s final restoration is complete, holy, and joyful."]}
 ];
+
+function buildReadingCycle(){
+  const cycle=[];
+  BIBLE_BOOKS.forEach(b=>{
+    for(let ch=1;ch<=b.chapters;ch+=2){
+      const end=Math.min(ch+1,b.chapters);
+      cycle.push({book:b.book,start:ch,end,theme:b.theme,takeaways:b.takeaways});
+    }
+  });
+  return cycle;
+}
+const READING_CYCLE=buildReadingCycle();
+const PLAN_START=new Date(2026,0,1);
+
+function dateFromKey(key){
+  const [y,m,d]=key.split('-').map(Number);
+  return new Date(y,m-1,d);
+}
+
+function getReadingForDate(date){
+  const d=new Date(date.getFullYear(),date.getMonth(),date.getDate());
+  let diff=Math.floor((d-PLAN_START)/86400000);
+  if(diff<0){
+    diff=((diff%READING_CYCLE.length)+READING_CYCLE.length)%READING_CYCLE.length;
+  }
+  const idx=diff%READING_CYCLE.length;
+  const r=READING_CYCLE[idx];
+  const chapterLabel=r.start===r.end?`${r.book} ${r.start}`:`${r.book} ${r.start}–${r.end}`;
+  return {...r,index:idx,chapterLabel};
+}
+
+function readingBoxHtml(reading,label='Selected reading'){
+  return `<div class="readlbl"><i class="ti ti-book-2" aria-hidden="true"></i> ${label}</div>
+    <div class="readmain">${reading.chapterLabel}</div>
+    <div class="readsub">Theme: ${reading.theme}</div>
+    <ul class="takeaways">${reading.takeaways.map(t=>`<li>${t}</li>`).join('')}</ul>`;
+}
+
 
 const VERSES=[
   {text:"Your word is a lamp for my feet, a light on my path.",ref:"Psalm 119:105"},
@@ -405,11 +464,14 @@ function selectDay(key){
   document.getElementById('p1BtnLbl').textContent=(dd.p1?'✓ ':'')+n1;
   document.getElementById('p2BtnLbl').textContent=(dd.p2?'✓ ':'')+n2;
   document.getElementById('noteArea').value=dd.note||'';
+  const rb=document.getElementById('dayReadingBox');
+  if(rb)rb.innerHTML=readingBoxHtml(getReadingForDate(d),'Reading for this day');
   document.getElementById('saveMsg').textContent='';
   document.getElementById('dayPanel').style.display='block';
+  renderReadingPlan();
 }
 
-function closePanel(){selectedKey=null;document.getElementById('dayPanel').style.display='none';renderCalendar();}
+function closePanel(){selectedKey=null;document.getElementById('dayPanel').style.display='none';renderCalendar();renderReadingPlan();}
 
 async function togglePerson(p){
   if(!selectedKey)return;
@@ -436,12 +498,14 @@ function changeMonth(dir){
 }
 
 function renderReadingPlan(){
-  const plan=PLAN[viewMonth];
   document.getElementById('rpTitle').textContent=`${MONTHS[viewMonth]} ${viewYear}`;
-  document.getElementById('rpTheme').innerHTML=`<i class="ti ti-sparkles" aria-hidden="true"></i> Theme: <em>${plan.theme}</em>`;
+  const selectedDate=selectedKey?dateFromKey(selectedKey):today;
+  const selectedReading=getReadingForDate(selectedDate);
+  const selectedLabel=selectedKey?'Selected reading':'Today\'s reading';
+  document.getElementById('rpTheme').innerHTML=`<i class="ti ti-sparkles" aria-hidden="true"></i> Plan: <em>2 chapters per day from one Bible book at a time</em>`;
   document.getElementById('bookCards').innerHTML=`
-    <div class="bkcard"><div class="bktype"><i class="ti ti-book-2" aria-hidden="true"></i> Old Testament</div><div class="bkname">${plan.ot}</div></div>
-    <div class="bkcard"><div class="bktype"><i class="ti ti-book" aria-hidden="true"></i> New Testament</div><div class="bkname">${plan.nt}</div></div>`;
+    <div class="bkcard"><div class="bktype"><i class="ti ti-book-2" aria-hidden="true"></i> Current book</div><div class="bkname">${selectedReading.book}</div></div>
+    <div class="bkcard"><div class="bktype"><i class="ti ti-list-numbers" aria-hidden="true"></i> Current reading</div><div class="bkname">${selectedReading.chapterLabel}</div></div>`;
   const dim=new Date(viewYear,viewMonth+1,0).getDate();
   const daysDone=Array.from({length:dim},(_,i)=>{
     const k=`${viewYear}-${String(viewMonth+1).padStart(2,'0')}-${String(i+1).padStart(2,'0')}`;
@@ -450,17 +514,21 @@ function renderReadingPlan(){
   const pct=Math.round(daysDone/dim*100);
   document.getElementById('progLabel').textContent=`${daysDone}/${dim} days`;
   document.getElementById('progFill').style.width=pct+'%';
-  const d=today.getDate(),m=today.getMonth(),y=today.getFullYear();
-  let html='';
-  plan.weeks.forEach((w,i)=>{
-    const [s,e]=w.days.split('–').map(Number);
-    const end=e||s+6;
-    const isCW=viewMonth===m&&viewYear===y&&d>=s&&d<=end;
-    html+=`<div class="witem${isCW?' cw':''}">
-      <div class="wnum${isCW?' cw':''}">Week ${i+1} · Days ${w.days}${isCW?' · <strong>This week</strong>':''}</div>
-      <div class="wread"><span class="wtag">OT</span> ${w.ot}<br><span class="wtag">NT</span> ${w.nt}</div>
+  const box=document.getElementById('selectedReadingBox');
+  if(box)box.innerHTML=readingBoxHtml(selectedReading,selectedLabel);
+  let html='<div class="daily-list">';
+  for(let d=1;d<=dim;d++){
+    const key=`${viewYear}-${String(viewMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const date=new Date(viewYear,viewMonth,d);
+    const reading=getReadingForDate(date);
+    const done=data.days[key]&&(data.days[key].p1||data.days[key].p2);
+    const isToday=key===todayKey;
+    html+=`<div class="ditem${isToday?' today':''}${done?' done':''}" onclick="selectDay('${key}')">
+      <div class="dnum">${MONTHS[viewMonth].slice(0,3)} ${d}${isToday?' · Today':''}${done?' · Completed':''}</div>
+      <div class="dread">${reading.chapterLabel}</div>
     </div>`;
-  });
+  }
+  html+='</div>';
   document.getElementById('weekList').innerHTML=html;
 }
 
